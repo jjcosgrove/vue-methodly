@@ -1,0 +1,40 @@
+{
+  "name": "vue-methodly",
+  "version": "0.0.5",
+  "description": "A simple Vue mixin to augment your Vue instance methods with custom ones",
+  "author": {
+    "name": "Jonathan James Cosgrove",
+    "email": "jjcosgrove.inbox@gmail.com"
+  },
+  "keywords": [
+    "methods",
+    "hooks",
+    "lifecycle",
+    "plugin",
+    "vue",
+    "vuejs"
+  ],
+  "main": "dist/umd/vue-methodly.umd.min.js",
+  "module": "src/vue-methodly.js",
+  "scripts": {
+    "prepublishOnly": "npm run build",
+    "build": "rm -rf dist && npm run rollup:esm && npm run rollup:umd && npm run rollup:umd-min",
+    "rollup:esm": "rollup --config ./rollup.config.esm.js",
+    "rollup:umd": "rollup --config ./rollup.config.umd.js",
+    "rollup:umd-min": "rollup --config ./rollup.config.umd.min.js"
+  },
+  "peerDependencies": {
+    "vue": "^2.5.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.0.0",
+    "@babel/polyfill": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "rollup": "^0.65.0",
+    "rollup-plugin-babel": "^4.0.2",
+    "rollup-plugin-babel-minify": "^6.0.0",
+    "rollup-plugin-commonjs": "^9.1.6",
+    "rollup-plugin-node-resolve": "^3.3.0"
+  },
+  "license": "MIT"
+}
