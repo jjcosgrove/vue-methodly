@@ -2,6 +2,25 @@
 
 A simple Vue mixin to augment your Vue instance methods with custom ones
 
+## Install
+
+### Node.js / Webpack
+
+```bash
+npm install vue-methodly --save
+```
+or
+
+```bash
+yarn add vue-methodly --save
+```
+
+### UMD / Browser
+
+```html
+<script src="https://unpkg.com/vue-methodly"></script>
+```
+
 ## Usage
 
 ```js
