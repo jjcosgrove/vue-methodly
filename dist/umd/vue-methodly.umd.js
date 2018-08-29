@@ -799,7 +799,7 @@
 
       };
       Object.keys(hooks).forEach(function (hookKey) {
-        var hasMethods = options.methods && options.methods.length;
+        var hasMethods = options && options.methods && options.methods.length;
         hooks[hookKey] = hasMethods && options.methods.filter(function (method) {
           // ignore attemps to use in-built method names
           return method.hook === hookKey && !Object.keys(hooks).includes(method.name);

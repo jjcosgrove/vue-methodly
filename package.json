@@ -1,6 +1,6 @@
 {
   "name": "vue-methodly",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "A simple Vue mixin to augment your Vue instance methods with custom ones",
   "author": {
     "name": "Jonathan James Cosgrove",

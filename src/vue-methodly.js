@@ -16,7 +16,7 @@ const VueMethodly = {
     // map methods to each hook from options
     Object.keys(hooks)
       .forEach(hookKey => {
-        let hasMethods = options.methods && options.methods.length
+        let hasMethods = options && options.methods && options.methods.length
 
         hooks[hookKey] = (hasMethods &&
           options.methods.filter(method => {
