@@ -18,11 +18,7 @@ module.exports = {
   plugins: [
     'vue'
   ],
-  globals: {
-    'ga': true, // Google Analytics
-    'cordova': true,
-    '__statics': true
-  },
+  globals: {},
   // add your custom rules here
   'rules': {
     // allow async-await
