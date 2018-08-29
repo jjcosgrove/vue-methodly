@@ -54,3 +54,6 @@ export default {
 }
 ...
 ```
+
+## Example
+https://jsfiddle.net/yprbeh5f/
