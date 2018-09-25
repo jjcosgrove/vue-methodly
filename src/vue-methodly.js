@@ -1,53 +1,74 @@
 const VueMethodly = {
   install: (Vue, options) => {
-    // initialise hook methods
+    // initial hooks
     let hooks = {
-      beforeCreate: [],
-      created: [],
-      beforeMount: [],
-      mounted: [],
-      update: [],
-      activated: [],
-      deactivated: [],
-      beforeDestroy: [],
-      destroyed: []
+      'beforeCreate': [],
+      'created': [],
+      'beforeMount': [],
+      'mounted': [],
+      'update': [],
+      'activated': [],
+      'deactivated': [],
+      'beforeDestroy': [],
+      'destroyed': []
     }
 
-    // map methods to each hook from options
-    Object.keys(hooks)
-      .forEach(hookKey => {
-        let hasMethods = options && options.methods && options.methods.length
+    // boolean helper
+    let hasMethods = Array.isArray(options.methods)
 
-        hooks[hookKey] = (hasMethods &&
-          options.methods.filter(method => {
-            // ignore attemps to use in-built method names
-            return method.hook === hookKey &&
-              !Object.keys(hooks).includes(method.name)
-          })) || []
-      })
-
-    // helper method to iterate over each
-    // hook method and fire it off
-    const enableHookMethods = (vm, hook) => {
-      hooks[hook].forEach(method => {
-        const hookMethod = vm.$options[method.name] || false
-        hookMethod && hookMethod.call(vm)
-      })
+    // bail if nothing to do
+    if (!hasMethods) {
+      return
     }
 
-    // create a simple mixin and call each of the hook's methods
-    // in the order they are found provided the options during init
-    Vue.mixin({
-      beforeCreate () { enableHookMethods(this, 'beforeCreate') },
-      created () { enableHookMethods(this, 'created') },
-      beforeMount () { enableHookMethods(this, 'beforeMount') },
-      mounted () { enableHookMethods(this, 'mounted') },
-      update () { enableHookMethods(this, 'update') },
-      activated () { enableHookMethods(this, 'activated') },
-      deactivated () { enableHookMethods(this, 'deactivated') },
-      beforeDestroy () { enableHookMethods(this, 'beforeDestroy') },
-      destroyed () { enableHookMethods(this, 'destroyed') }
+    // add methods to hooks
+    Object.keys(hooks).map(hook => {
+      // grab methods for this hook
+      let methodsForHook = options.methods
+        .filter(method => method.hook === hook)
+
+      // add each one, so long as name does not collide with any native hooks
+      methodsForHook.forEach(methodForHook => {
+        if (!Object.keys(hooks).includes(methodsForHook)) {
+          hooks[hook].push(methodForHook)
+        }
+      })
     })
+
+    // reduce into only hooks which have methods
+    const hooksWithMethods = Object.keys(hooks)
+      .reduce((acc, hook) => {
+        if (hooks[hook].length) {
+          // first run, initialize
+          if (!acc[hook]) {
+            acc[hook] = []
+          }
+
+          // add to hook collection
+          acc[hook].push(hooks[hook])
+        }
+        return acc
+      }, {})
+
+    // base mixin
+    const mixin = {}
+
+    // for each method in each hook with methods, execute the method
+    // when the native hook executes, maintaining order in line with
+    // defintions/config provided during init
+    Object.keys(hooksWithMethods).forEach(hookWithMethods => {
+      mixin[hookWithMethods] = function () {
+        hooksWithMethods[hookWithMethods].forEach(hookWithMethods => {
+          hookWithMethods.forEach(hookWithMethod => {
+            const hookMethod = this.$options[hookWithMethod.name] || false
+            hookMethod && hookMethod.call(this)
+          })
+        })
+      }
+    })
+
+    // install mixin
+    Vue.mixin(mixin)
   }
 }
 
