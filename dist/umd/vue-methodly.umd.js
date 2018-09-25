@@ -227,6 +227,18 @@
   $export.R = 128; // real proto method for `library`
   var _export = $export;
 
+  // 7.2.1 RequireObjectCoercible(argument)
+  var _defined = function (it) {
+    if (it == undefined) throw TypeError("Can't call method on  " + it);
+    return it;
+  };
+
+  // 7.1.13 ToObject(argument)
+
+  var _toObject = function (it) {
+    return Object(_defined(it));
+  };
+
   var toString = {}.toString;
 
   var _cof = function (it) {
@@ -238,19 +250,6 @@
   // eslint-disable-next-line no-prototype-builtins
   var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
     return _cof(it) == 'String' ? it.split('') : Object(it);
-  };
-
-  // 7.2.1 RequireObjectCoercible(argument)
-  var _defined = function (it) {
-    if (it == undefined) throw TypeError("Can't call method on  " + it);
-    return it;
-  };
-
-  // to indexed object, toObject with fallback for non-array-like ES3 strings
-
-
-  var _toIobject = function (it) {
-    return _iobject(_defined(it));
   };
 
   // 7.1.4 ToInteger
@@ -265,6 +264,51 @@
   var min = Math.min;
   var _toLength = function (it) {
     return it > 0 ? min(_toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+  };
+
+  var _arrayReduce = function (that, callbackfn, aLen, memo, isRight) {
+    _aFunction(callbackfn);
+    var O = _toObject(that);
+    var self = _iobject(O);
+    var length = _toLength(O.length);
+    var index = isRight ? length - 1 : 0;
+    var i = isRight ? -1 : 1;
+    if (aLen < 2) for (;;) {
+      if (index in self) {
+        memo = self[index];
+        index += i;
+        break;
+      }
+      index += i;
+      if (isRight ? index < 0 : length <= index) {
+        throw TypeError('Reduce of empty array with no initial value');
+      }
+    }
+    for (;isRight ? index >= 0 : length > index; index += i) if (index in self) {
+      memo = callbackfn(memo, self[index], index, O);
+    }
+    return memo;
+  };
+
+  var _strictMethod = function (method, arg) {
+    return !!method && _fails(function () {
+      // eslint-disable-next-line no-useless-call
+      arg ? method.call(null, function () { /* empty */ }, 1) : method.call(null);
+    });
+  };
+
+  _export(_export.P + _export.F * !_strictMethod([].reduce, true), 'Array', {
+    // 22.1.3.18 / 15.4.4.21 Array.prototype.reduce(callbackfn [, initialValue])
+    reduce: function reduce(callbackfn /* , initialValue */) {
+      return _arrayReduce(this, callbackfn, arguments.length, arguments[1], false);
+    }
+  });
+
+  // to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+  var _toIobject = function (it) {
+    return _iobject(_defined(it));
   };
 
   var max = Math.max;
@@ -387,12 +431,6 @@
     }
   });
 
-  // 7.1.13 ToObject(argument)
-
-  var _toObject = function (it) {
-    return Object(_defined(it));
-  };
-
   // 7.2.2 IsArray(argument)
 
   var _isArray = Array.isArray || function isArray(arg) {
@@ -466,12 +504,15 @@
     };
   };
 
-  var _strictMethod = function (method, arg) {
-    return !!method && _fails(function () {
-      // eslint-disable-next-line no-useless-call
-      arg ? method.call(null, function () { /* empty */ }, 1) : method.call(null);
-    });
-  };
+  var $forEach = _arrayMethods(0);
+  var STRICT = _strictMethod([].forEach, true);
+
+  _export(_export.P + _export.F * !STRICT, 'Array', {
+    // 22.1.3.10 / 15.4.4.18 Array.prototype.forEach(callbackfn [, thisArg])
+    forEach: function forEach(callbackfn /* , thisArg */) {
+      return $forEach(this, callbackfn, arguments[1]);
+    }
+  });
 
   var $filter = _arrayMethods(2);
 
@@ -700,27 +741,6 @@
   _addToUnscopables('values');
   _addToUnscopables('entries');
 
-  // most Object methods by ES6 should accept primitives
-
-
-
-  var _objectSap = function (KEY, exec) {
-    var fn = (_core.Object || {})[KEY] || Object[KEY];
-    var exp = {};
-    exp[KEY] = exec(fn);
-    _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-  };
-
-  // 19.1.2.14 Object.keys(O)
-
-
-
-  _objectSap('keys', function () {
-    return function keys(it) {
-      return _objectKeys(_toObject(it));
-    };
-  });
-
   var ITERATOR$1 = _wks('iterator');
   var TO_STRING_TAG = _wks('toStringTag');
   var ArrayValues = _iterators.Array;
@@ -773,78 +793,108 @@
     }
   }
 
-  var $forEach = _arrayMethods(0);
-  var STRICT = _strictMethod([].forEach, true);
+  // most Object methods by ES6 should accept primitives
 
-  _export(_export.P + _export.F * !STRICT, 'Array', {
-    // 22.1.3.10 / 15.4.4.18 Array.prototype.forEach(callbackfn [, thisArg])
-    forEach: function forEach(callbackfn /* , thisArg */) {
-      return $forEach(this, callbackfn, arguments[1]);
+
+
+  var _objectSap = function (KEY, exec) {
+    var fn = (_core.Object || {})[KEY] || Object[KEY];
+    var exp = {};
+    exp[KEY] = exec(fn);
+    _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
+  };
+
+  // 19.1.2.14 Object.keys(O)
+
+
+
+  _objectSap('keys', function () {
+    return function keys(it) {
+      return _objectKeys(_toObject(it));
+    };
+  });
+
+  var $map = _arrayMethods(1);
+
+  _export(_export.P + _export.F * !_strictMethod([].map, true), 'Array', {
+    // 22.1.3.15 / 15.4.4.19 Array.prototype.map(callbackfn [, thisArg])
+    map: function map(callbackfn /* , thisArg */) {
+      return $map(this, callbackfn, arguments[1]);
     }
   });
 
+  // 22.1.2.2 / 15.4.3.2 Array.isArray(arg)
+
+
+  _export(_export.S, 'Array', { isArray: _isArray });
+
   var VueMethodly = {
     install: function install(Vue, options) {
-      // initialise hook methods
+      // initial hooks
       var hooks = {
-        beforeCreate: [],
-        created: [],
-        beforeMount: [],
-        mounted: [],
-        update: [],
-        activated: [],
-        deactivated: [],
-        beforeDestroy: [],
-        destroyed: [] // map methods to each hook from options
+        'beforeCreate': [],
+        'created': [],
+        'beforeMount': [],
+        'mounted': [],
+        'update': [],
+        'activated': [],
+        'deactivated': [],
+        'beforeDestroy': [],
+        'destroyed': [] // boolean helper
 
       };
-      Object.keys(hooks).forEach(function (hookKey) {
-        var hasMethods = options && options.methods && options.methods.length;
-        hooks[hookKey] = hasMethods && options.methods.filter(function (method) {
-          // ignore attemps to use in-built method names
-          return method.hook === hookKey && !Object.keys(hooks).includes(method.name);
-        }) || [];
-      }); // helper method to iterate over each
-      // hook method and fire it off
+      var hasMethods = Array.isArray(options.methods); // bail if nothing to do
 
-      var enableHookMethods = function enableHookMethods(vm, hook) {
-        hooks[hook].forEach(function (method) {
-          var hookMethod = vm.$options[method.name] || false;
-          hookMethod && hookMethod.call(vm);
+      if (!hasMethods) {
+        return;
+      } // add methods to hooks
+
+
+      Object.keys(hooks).map(function (hook) {
+        // grab methods for this hook
+        var methodsForHook = options.methods.filter(function (method) {
+          return method.hook === hook;
+        }); // add each one, so long as name does not collide with any native hooks
+
+        methodsForHook.forEach(function (methodForHook) {
+          if (!Object.keys(hooks).includes(methodsForHook)) {
+            hooks[hook].push(methodForHook);
+          }
         });
-      }; // create a simple mixin and call each of the hook's methods
-      // in the order they are found provided the options during init
+      }); // reduce into only hooks which have methods
+
+      var hooksWithMethods = Object.keys(hooks).reduce(function (acc, hook) {
+        if (hooks[hook].length) {
+          // first run, initialize
+          if (!acc[hook]) {
+            acc[hook] = [];
+          } // add to hook collection
 
 
-      Vue.mixin({
-        beforeCreate: function beforeCreate() {
-          enableHookMethods(this, 'beforeCreate');
-        },
-        created: function created() {
-          enableHookMethods(this, 'created');
-        },
-        beforeMount: function beforeMount() {
-          enableHookMethods(this, 'beforeMount');
-        },
-        mounted: function mounted() {
-          enableHookMethods(this, 'mounted');
-        },
-        update: function update() {
-          enableHookMethods(this, 'update');
-        },
-        activated: function activated() {
-          enableHookMethods(this, 'activated');
-        },
-        deactivated: function deactivated() {
-          enableHookMethods(this, 'deactivated');
-        },
-        beforeDestroy: function beforeDestroy() {
-          enableHookMethods(this, 'beforeDestroy');
-        },
-        destroyed: function destroyed() {
-          enableHookMethods(this, 'destroyed');
+          acc[hook].push(hooks[hook]);
         }
-      });
+
+        return acc;
+      }, {}); // base mixin
+
+      var mixin = {}; // for each method in each hook with methods, execute the method
+      // when the native hook executes, maintaining order in line with
+      // defintions/config provided during init
+
+      Object.keys(hooksWithMethods).forEach(function (hookWithMethods) {
+        mixin[hookWithMethods] = function () {
+          var _this = this;
+
+          hooksWithMethods[hookWithMethods].forEach(function (hookWithMethods) {
+            hookWithMethods.forEach(function (hookWithMethod) {
+              var hookMethod = _this.$options[hookWithMethod.name] || false;
+              hookMethod && hookMethod.call(_this);
+            });
+          });
+        };
+      }); // install mixin
+
+      Vue.mixin(mixin);
     }
   };
 
