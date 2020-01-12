@@ -1,6 +1,6 @@
 # Vue Methodly
 
-A simple Vue plugin to augment your Vue instance methods with custom ones
+A simple Vue plugin to augment your Vue instance methods with custom ones.
 
 ## Install
 
